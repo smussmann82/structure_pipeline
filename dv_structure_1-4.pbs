@@ -1,0 +1,45 @@
+#!/bin/bash
+
+#PBS -N spd_dv_structure_1-4
+#PBS -q qcondo
+#PBS -j oe
+#PBS -m abe
+#PBS -M mussmann@uark.edu
+#PBS -o spd_dv_structure_1-4.$PBS_JOBID
+#PBS -l nodes=1:ppn=16:m256gb
+#PBS -l walltime=10:00:00:00
+
+# set the name of the data file
+cd $PBS_O_WORKDIR
+DATA="spd_dv_oneline.str"
+SCRATCH=$PBS_SCRATCH_DIR_PARALLEL
+
+cp $DATA $SCRATCH/$DATA
+
+cd $SCRATCH
+
+# set the parameters of the structure run
+BEGIN="1"
+END="4"
+RUNS="8"
+BURN="100000"
+GEN="500000"
+
+# number of individuals
+IND=`cat $DATA | wc -l`
+echo $IND
+
+# number of loci
+LOCI=`awk '{print NF}' $DATA | sort -nu | tail -n 1`
+LOCI=$(($LOCI-3))
+LOCI=$(($LOCI/2))
+echo $LOCI
+
+# number of pops
+POPS=`awk '{print $2}' $DATA | sort | uniq | wc -l`
+echo $POPS
+
+# run structure
+pstructure -f $DATA -i $IND -l $LOCI -X $POPS -aCDEpSwqn -k $BEGIN -K $END -r $RUNS -b $BURN -g $GEN
+
+exit
